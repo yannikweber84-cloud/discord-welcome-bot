@@ -1,76 +1,55 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const express = require('express');
+const { Client, GatewayIntentBits } = require("discord.js");
+const express = require("express");
 
 const app = express();
 
-// KEEP ALIVE SERVER
-app.get('/', (req, res) => {
-    res.send('Bot läuft!');
+// Webserver für Render + UptimeRobot
+app.get("/", (req, res) => {
+    res.send("Bot läuft!");
 });
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log('🌍 Webserver läuft');
+app.listen(3000, () => {
+    console.log("🌍 Webserver läuft");
 });
 
-// DISCORD CLIENT
+// Discord Bot
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers
-    ],
-    restTimeOffset: 0,
-    failIfNotExists: false
+    ]
 });
 
-// ONLINE
-client.once('ready', () => {
+// Bot online
+client.once("clientReady", () => {
     console.log(`✅ Bot online als ${client.user.tag}`);
 });
 
-// RECONNECT INFO
-client.on('disconnect', () => {
-    console.log('❌ Bot disconnected');
-});
+// Wenn jemand joint
+client.on("guildMemberAdd", async (member) => {
 
-client.on('reconnecting', () => {
-    console.log('🔄 Bot reconnecting...');
-});
+    // Rollen die gegeben werden sollen
+    const rollen = [
+        "Mitglied",
+        "💎Mitglied💎"
+    ];
 
-client.on('resume', () => {
-    console.log('✅ Verbindung wiederhergestellt');
-});
+    for (const rollenName of rollen) {
 
-// AUTO ROLLEN
-client.on('guildMemberAdd', async (member) => {
-
-    try {
-
-        const role1 = member.guild.roles.cache.find(
-            r => r.name === "➢ Mitglied"
+        const rolle = member.guild.roles.cache.find(
+            r => r.name === rollenName
         );
 
-        const role2 = member.guild.roles.cache.find(
-            r => r.name === "┏―――――💎Mitglied💎――――┛"
-        );
-
-        if (role1) await member.roles.add(role1);
-        if (role2) await member.roles.add(role2);
-
-        console.log(`${member.user.tag} bekam Rollen`);
-
-    } catch (err) {
-        console.log('Rollen Fehler:', err);
+        if (rolle) {
+            await member.roles.add(rolle);
+            console.log(`${member.user.tag} bekam Rolle ${rollenName}`);
+        }
     }
 });
 
-// FEHLER SCHUTZ
-process.on('unhandledRejection', error => {
-    console.log('Unhandled promise rejection:', error);
-});
+// Fehler Schutz
+process.on("unhandledRejection", console.error);
+process.on("uncaughtException", console.error);
 
-process.on('uncaughtException', error => {
-    console.log('Uncaught exception:', error);
-});
-
-// LOGIN
-client.login(process.env.TOKEN);
+// Login
+client.login(process.env.DISCORD_TOKEN);
