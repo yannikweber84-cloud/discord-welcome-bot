@@ -68,7 +68,7 @@ function embed(title, desc, color = 0x5865F2) {
 // ======================
 // READY
 // ======================
-client.once("ready", () => {
+client.once("clientReady", () => {
     console.log("Bot online: " + client.user.tag);
 });
 
