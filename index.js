@@ -217,4 +217,4 @@ process.on("uncaughtException", console.error);
 // ======================
 // LOGIN
 // ======================
-client.login(process.env.DISCORD_TOKEN);
+console.log("TOKEN:", process.env.DISCORD_TOKEN);
