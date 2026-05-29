@@ -81,4 +81,8 @@ client.on("guildMemberAdd", async (member) => {
 // ======================
 // LOGIN
 // ======================
+client.on("guildMemberAdd", async (member) => {
+    // code
+});
+
 client.login(process.env.DISCORD_TOKEN);
