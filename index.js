@@ -39,8 +39,9 @@ const LOG_CHANNEL_ID = "1507456889615810642";
 // ======================
 // READY
 // ======================
-client.once("ready", () => {
+client.once("clientReady", () => {
     console.log("Bot online: " + client.user.tag);
+});
 });
 
 // ======================
