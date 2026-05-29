@@ -1,5 +1,5 @@
 const express = require("express");
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
 // ======================
 // WEB SERVER (Render Pflicht)
@@ -34,18 +34,21 @@ const ROLE_IDS = [
     "1507456888843800596"
 ];
 
+const LOG_CHANNEL_ID = "1507456889615810642";
+
 // ======================
 // READY
 // ======================
-client.once("clientReady", () => {
+client.once("ready", () => {
     console.log("Bot online: " + client.user.tag);
 });
 
 // ======================
-// AUTO ROLES
+// AUTO ROLES + JOIN LOG
 // ======================
 client.on("guildMemberAdd", async (member) => {
 
+    // ===== AUTO ROLES =====
     for (const roleId of ROLE_IDS) {
         const role = member.guild.roles.cache.get(roleId);
 
@@ -53,6 +56,24 @@ client.on("guildMemberAdd", async (member) => {
             member.roles.add(role).catch(console.error);
         }
     }
+
+    // ===== LOG CHANNEL =====
+    const logChannel = member.guild.channels.cache.get(LOG_CHANNEL_ID);
+
+    if (!logChannel) return;
+
+    const embed = new EmbedBuilder()
+        .setTitle("⚡️ Logging ⚡️")
+        .setDescription(
+            `<@${member.id}> ist gejoined!\n\n` +
+            `UserId: ${member.id}\n\n` +
+            `Aktuelle Memberanzahl: ${member.guild.memberCount}`
+        )
+        .setColor(0x00ffcc)
+        .setFooter({ text: "powered by PowerBot" })
+        .setTimestamp();
+
+    logChannel.send({ embeds: [embed] }).catch(console.error);
 });
 
 // ======================
