@@ -39,11 +39,9 @@ const LOG_CHANNEL_ID = "1507456889615810642";
 // ======================
 // READY
 // ======================
-client.once("clientReady", () => {
+client.once("ready", () => {
     console.log("Bot online: " + client.user.tag);
 });
-
-client.login(process.env.DISCORD_TOKEN);
 
 // ======================
 // AUTO ROLES + JOIN LOG
@@ -72,6 +70,7 @@ client.on("guildMemberAdd", async (member) => {
             `Aktuelle Memberanzahl: ${member.guild.memberCount}`
         )
         .setColor(0x00ffcc)
+        .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
         .setFooter({ text: "powered by PowerBot" })
         .setTimestamp();
 
@@ -81,3 +80,4 @@ client.on("guildMemberAdd", async (member) => {
 // ======================
 // LOGIN
 // ======================
+client.login(process.env.DISCORD_TOKEN);
