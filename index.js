@@ -58,7 +58,7 @@ client.on("guildMemberAdd", async (member) => {
     }
 
     // ===== LOG CHANNEL =====
-    const logChannel = member.guild.channels.cache.get(LOG_CHANNEL_ID);
+    const logChannel = await member.guild.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
 
     if (!logChannel) return;
 
