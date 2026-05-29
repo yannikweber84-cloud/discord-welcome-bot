@@ -1,4 +1,3 @@
-```js id="z7x8p1"
 const express = require("express");
 const app = express();
 
@@ -7,6 +6,10 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log("Webserver läuft auf Port " + PORT);
+});
 
 const {
     Client,
