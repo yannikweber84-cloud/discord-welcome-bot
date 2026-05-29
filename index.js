@@ -1,3 +1,4 @@
+```js id="z7x8p1"
 const express = require("express");
 const app = express();
 
@@ -6,14 +7,14 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-```js id="4s2k91"
+
 const {
     Client,
     GatewayIntentBits,
     Partials,
     EmbedBuilder
 } = require("discord.js");
-
+```
 const express = require("express");
 
 const app = express();
