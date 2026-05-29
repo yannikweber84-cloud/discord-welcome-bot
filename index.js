@@ -71,7 +71,7 @@ client.on("guildMemberAdd", async (member) => {
         )
         .setColor(0x00ffcc)
         .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
-        .setFooter({ text: "powered by PowerBot" })
+        .setFooter({ text: "powered by FARM" })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] }).catch(console.error);
