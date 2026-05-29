@@ -8,33 +8,32 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-    console.log(`🌐 Server läuft auf Port ${PORT}`);
-});
-;
-require("dotenv").config();
-```js
+```js id="4s2k91"
 const {
     Client,
     GatewayIntentBits,
     Partials,
-    EmbedBuilder,
-    AuditLogEvent
+    EmbedBuilder
 } = require("discord.js");
 
 const express = require("express");
 
 const app = express();
 
+// =========================
+// WEB SERVER
+// =========================
 app.get("/", (req, res) => {
-    res.send("Bot läuft!");
+    res.send("Bot läuft");
 });
 
 app.listen(3000, () => {
-    console.log("🌍 Webserver läuft");
+    console.log("Webserver gestartet");
 });
 
+// =========================
+// DISCORD CLIENT
+// =========================
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -42,24 +41,37 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildModeration,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildInvites
     ],
     partials: [
-        Partials.Message,
         Partials.Channel,
+        Partials.Message,
         Partials.GuildMember
     ]
 });
 
-const LOG_CHANNEL = "╠»🪻𝐋𝐨𝐠𝐬";
+// =========================
+// CONFIG
+// =========================
 
+// LOG CHANNEL ID
+const LOG_CHANNEL_ID = "1508905272972673104";
+
+// AUTOMATISCHE ROLLEN IDs
+const START_ROLES = [
+    "1508899625258717355",
+    "1507456888843800596"
+];
+
+// =========================
+// HELPER
+// =========================
 function getLogChannel(guild) {
-    return guild.channels.cache.find(
-        c => c.name === LOG_CHANNEL
-    );
+    return guild.channels.cache.get(LOG_CHANNEL_ID);
 }
 
-function createEmbed(title, description, color = "Purple") {
+function createEmbed(title, description, color = 0x9b59b6) {
     return new EmbedBuilder()
         .setTitle(title)
         .setDescription(description)
@@ -67,53 +79,47 @@ function createEmbed(title, description, color = "Purple") {
         .setTimestamp();
 }
 
-client.once("clientReady", () => {
-    console.log(`Bot online ${client.user.tag}`);
+// =========================
+// READY
+// =========================
+client.once("ready", () => {
+    console.log("Bot online als " + client.user.tag);
 });
-
 
 // =========================
 // MEMBER JOIN
 // =========================
-
 client.on("guildMemberAdd", async (member) => {
 
-    const rollen = [
-        "Mitglied",
-        "💎Mitglied💎"
-    ];
+    // ROLLEN GEBEN
+    for (const roleId of START_ROLES) {
 
-    for (const rollenName of rollen) {
+        const role = member.guild.roles.cache.get(roleId);
 
-        const rolle = member.guild.roles.cache.find(
-            r => r.name === rollenName
-        );
-
-        if (rolle) {
-            await member.roles.add(rolle);
+        if (role) {
+            await member.roles.add(role).catch(console.error);
         }
     }
 
+    // LOG
     const logChannel = getLogChannel(member.guild);
 
     if (logChannel) {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "✅ Member Joined",
-                    `${member.user.tag} ist dem Server beigetreten.`,
-                    "Green"
+                    "Member Joined",
+                    member.user.tag + " ist dem Server beigetreten",
+                    0x2ecc71
                 )
             ]
         });
     }
 });
 
-
 // =========================
 // MEMBER LEFT
 // =========================
-
 client.on("guildMemberRemove", async (member) => {
 
     const logChannel = getLogChannel(member.guild);
@@ -122,20 +128,18 @@ client.on("guildMemberRemove", async (member) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "❌ Member Left",
-                    `${member.user.tag} hat den Server verlassen.`,
-                    "Red"
+                    "Member Left",
+                    member.user.tag + " hat den Server verlassen",
+                    0xe74c3c
                 )
             ]
         });
     }
 });
 
-
 // =========================
 // MEMBER BANNED
 // =========================
-
 client.on("guildBanAdd", async (ban) => {
 
     const logChannel = getLogChannel(ban.guild);
@@ -144,20 +148,18 @@ client.on("guildBanAdd", async (ban) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🔨 Member Banned",
-                    `${ban.user.tag} wurde gebannt.`,
-                    "DarkRed"
+                    "Member Banned",
+                    ban.user.tag + " wurde gebannt",
+                    0xff0000
                 )
             ]
         });
     }
 });
 
-
 // =========================
 // MEMBER UNBANNED
 // =========================
-
 client.on("guildBanRemove", async (ban) => {
 
     const logChannel = getLogChannel(ban.guild);
@@ -166,164 +168,207 @@ client.on("guildBanRemove", async (ban) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "✅ Member Unbanned",
-                    `${ban.user.tag} wurde entbannt.`,
-                    "Green"
+                    "Member Unbanned",
+                    ban.user.tag + " wurde entbannt",
+                    0x00ff00
                 )
             ]
         });
     }
 });
 
-
 // =========================
 // MESSAGE DELETE
 // =========================
-
 client.on("messageDelete", async (message) => {
 
     if (!message.guild) return;
 
     const logChannel = getLogChannel(message.guild);
 
-    if (logChannel) {
-        logChannel.send({
-            embeds: [
-                createEmbed(
-                    "🗑️ Message Deleted",
-                    `Nachricht von ${message.author} gelöscht:\n\n${message.content}`,
-                    "Orange"
-                )
-            ]
-        });
-    }
-});
+    if (!logChannel) return;
 
+    logChannel.send({
+        embeds: [
+            createEmbed(
+                "Message Deleted",
+                "Nachricht wurde gelöscht",
+                0xe67e22
+            )
+        ]
+    });
+});
 
 // =========================
 // MESSAGE EDIT
 // =========================
+client.on("messageUpdate", async (oldMsg, newMsg) => {
 
-client.on("messageUpdate", async (oldMessage, newMessage) => {
+    if (!oldMsg.guild) return;
 
-    if (!oldMessage.guild) return;
+    if (oldMsg.content === newMsg.content) return;
 
-    if (oldMessage.content === newMessage.content) return;
+    const logChannel = getLogChannel(oldMsg.guild);
 
-    const logChannel = getLogChannel(oldMessage.guild);
+    if (!logChannel) return;
 
-    if (logChannel) {
-        logChannel.send({
-            embeds: [
-                createEmbed(
-                    "✏️ Message Edited",
-                    `**Alt:** ${oldMessage.content}\n\n**Neu:** ${newMessage.content}`,
-                    "Yellow"
-                )
-            ]
-        });
-    }
+    logChannel.send({
+        embeds: [
+            createEmbed(
+                "Message Edited",
+                "Nachricht wurde bearbeitet",
+                0xf1c40f
+            )
+        ]
+    });
 });
-
 
 // =========================
 // CHANNEL CREATED
 // =========================
-
 client.on("channelCreate", async (channel) => {
 
     const logChannel = getLogChannel(channel.guild);
 
     if (logChannel) {
+
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "📁 Channel Created",
-                    `${channel.name} wurde erstellt.`,
-                    "Blue"
+                    "Channel Created",
+                    channel.name + " wurde erstellt",
+                    0x3498db
                 )
             ]
         });
     }
 });
 
-
 // =========================
 // CHANNEL DELETED
 // =========================
-
 client.on("channelDelete", async (channel) => {
 
     const logChannel = getLogChannel(channel.guild);
 
     if (logChannel) {
+
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🗑️ Channel Deleted",
-                    `${channel.name} wurde gelöscht.`,
-                    "Red"
+                    "Channel Deleted",
+                    channel.name + " wurde gelöscht",
+                    0xe74c3c
                 )
             ]
         });
     }
 });
 
+// =========================
+// CHANNEL UPDATED
+// =========================
+client.on("channelUpdate", async (oldChannel, newChannel) => {
+
+    const logChannel = getLogChannel(newChannel.guild);
+
+    if (logChannel) {
+
+        logChannel.send({
+            embeds: [
+                createEmbed(
+                    "Channel Updated",
+                    newChannel.name + " wurde bearbeitet",
+                    0xf1c40f
+                )
+            ]
+        });
+    }
+});
 
 // =========================
 // ROLE CREATED
 // =========================
-
 client.on("roleCreate", async (role) => {
 
     const logChannel = getLogChannel(role.guild);
 
     if (logChannel) {
+
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🛡️ Role Created",
-                    `${role.name} wurde erstellt.`,
-                    "Blue"
+                    "Role Created",
+                    role.name + " wurde erstellt",
+                    0x3498db
                 )
             ]
         });
     }
 });
 
-
 // =========================
 // ROLE DELETED
 // =========================
-
 client.on("roleDelete", async (role) => {
 
     const logChannel = getLogChannel(role.guild);
 
     if (logChannel) {
+
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🗑️ Role Deleted",
-                    `${role.name} wurde gelöscht.`,
-                    "Red"
+                    "Role Deleted",
+                    role.name + " wurde gelöscht",
+                    0xe74c3c
                 )
             ]
         });
     }
 });
 
-
 // =========================
-// ROLE GIVEN / REMOVED
+// MEMBER UPDATE
 // =========================
-
 client.on("guildMemberUpdate", async (oldMember, newMember) => {
 
     const logChannel = getLogChannel(newMember.guild);
 
     if (!logChannel) return;
 
+    // NICKNAME
+    if (oldMember.nickname !== newMember.nickname) {
+
+        logChannel.send({
+            embeds: [
+                createEmbed(
+                    "Nickname Changed",
+                    newMember.user.tag + " änderte Nickname",
+                    0xf1c40f
+                )
+            ]
+        });
+    }
+
+    // TIMEOUT
+    if (
+        oldMember.communicationDisabledUntilTimestamp !==
+        newMember.communicationDisabledUntilTimestamp
+    ) {
+
+        logChannel.send({
+            embeds: [
+                createEmbed(
+                    "Timeout Updated",
+                    newMember.user.tag + " Timeout geändert",
+                    0xe67e22
+                )
+            ]
+        });
+    }
+
+    // ROLLEN
     const oldRoles = oldMember.roles.cache;
     const newRoles = newMember.roles.cache;
 
@@ -336,47 +381,35 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
     );
 
     addedRoles.forEach(role => {
+
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "✅ Role Given",
-                    `${newMember.user.tag} bekam ${role.name}`,
-                    "Green"
+                    "Role Given",
+                    role.name + " wurde gegeben",
+                    0x2ecc71
                 )
             ]
         });
     });
 
     removedRoles.forEach(role => {
+
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "❌ Role Removed",
-                    `${newMember.user.tag} verlor ${role.name}`,
-                    "Red"
+                    "Role Removed",
+                    role.name + " wurde entfernt",
+                    0xe74c3c
                 )
             ]
         });
     });
-
-    if (oldMember.nickname !== newMember.nickname) {
-        logChannel.send({
-            embeds: [
-                createEmbed(
-                    "✏️ Nickname Changed",
-                    `**Alt:** ${oldMember.nickname || "Kein Nickname"}\n**Neu:** ${newMember.nickname || "Kein Nickname"}`,
-                    "Yellow"
-                )
-            ]
-        });
-    }
 });
-
 
 // =========================
 // VOICE LOGS
 // =========================
-
 client.on("voiceStateUpdate", async (oldState, newState) => {
 
     const logChannel = getLogChannel(newState.guild);
@@ -389,9 +422,11 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🔊 Voice Join",
-                    `${newState.member.user.tag} trat ${newState.channel.name} bei.`,
-                    "Green"
+                    "Voice Joined",
+                    newState.member.user.tag +
+                    " jointe " +
+                    newState.channel.name,
+                    0x2ecc71
                 )
             ]
         });
@@ -403,9 +438,10 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🔇 Voice Leave",
-                    `${newState.member.user.tag} verließ ${oldState.channel.name}.`,
-                    "Red"
+                    "Voice Left",
+                    newState.member.user.tag +
+                    " verließ Voice",
+                    0xe74c3c
                 )
             ]
         });
@@ -421,9 +457,10 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🔁 Voice Switch",
-                    `${newState.member.user.tag} wechselte von ${oldState.channel.name} nach ${newState.channel.name}.`,
-                    "Blue"
+                    "Voice Switch",
+                    newState.member.user.tag +
+                    " wechselte Voice Channel",
+                    0x3498db
                 )
             ]
         });
@@ -438,27 +475,66 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         logChannel.send({
             embeds: [
                 createEmbed(
-                    "🎤 Voice State Changed",
-                    `${newState.member.user.tag} änderte seinen Voice Status.`,
-                    "Purple"
+                    "Voice State Changed",
+                    newState.member.user.tag +
+                    " änderte Mute/Deafen",
+                    0xf1c40f
                 )
             ]
         });
     }
 });
 
+// =========================
+// SERVER UPDATE
+// =========================
+client.on("guildUpdate", async (oldGuild, newGuild) => {
+
+    const logChannel = getLogChannel(newGuild);
+
+    if (logChannel) {
+
+        logChannel.send({
+            embeds: [
+                createEmbed(
+                    "Server Updated",
+                    "Server Einstellungen wurden geändert",
+                    0x3498db
+                )
+            ]
+        });
+    }
+});
 
 // =========================
-// ERROR HANDLER
+// INVITE CREATED
 // =========================
+client.on("inviteCreate", async (invite) => {
 
+    const logChannel = getLogChannel(invite.guild);
+
+    if (logChannel) {
+
+        logChannel.send({
+            embeds: [
+                createEmbed(
+                    "Invite Created",
+                    "Ein neuer Invite wurde erstellt",
+                    0x2ecc71
+                )
+            ]
+        });
+    }
+});
+
+// =========================
+// ERROR HANDLING
+// =========================
 process.on("unhandledRejection", console.error);
 process.on("uncaughtException", console.error);
-
 
 // =========================
 // LOGIN
 // =========================
-
 client.login(process.env.DISCORD_TOKEN);
 ```
