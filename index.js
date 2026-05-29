@@ -23,9 +23,9 @@ const client = new Client({
 
 // ENV VARS (Render)
 const TOKEN = process.env.TOKEN;
-const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID;
-const ROLE_1_ID = process.env.ROLE_1_ID;
-const ROLE_2_ID = process.env.ROLE_2_ID;
+const WELCOME_CHANNEL_ID = process.env.1507456889615810642;
+const ROLE_1_ID = process.env.1508899625258717355;
+const ROLE_2_ID = process.env.1507456888843800596;
 
 client.once(Events.ClientReady, () => {
   console.log(`Bot online als ${client.user.tag}`);
