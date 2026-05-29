@@ -17,8 +17,6 @@ const {
     Partials,
     EmbedBuilder
 } = require("discord.js");
-const app = express();
-
 // =========================
 // WEB SERVER
 // =========================
