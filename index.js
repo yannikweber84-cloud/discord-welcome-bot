@@ -68,7 +68,7 @@ function createEmbed(title, description, color = "Purple") {
 }
 
 client.once("clientReady", () => {
-    console.log("Bot online als " + client.user.tag);
+    console.log(`Bot online ${client.user.tag}`);
 });
 
 
