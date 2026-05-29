@@ -218,3 +218,7 @@ process.on("uncaughtException", console.error);
 // LOGIN
 // ======================
 console.log("TOKEN:", process.env.DISCORD_TOKEN);
+console.log("LOGIN START");
+client.login(process.env.DISCORD_TOKEN)
+    .then(() => console.log("LOGIN OK"))
+    .catch(err => console.log("LOGIN ERROR", err));
