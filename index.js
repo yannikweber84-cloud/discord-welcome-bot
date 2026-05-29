@@ -1,19 +1,17 @@
 const { Client, GatewayIntentBits, Events } = require("discord.js");
 const express = require("express");
 
-// === EXPRESS SERVER (für Render Port) ===
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res) => {
-  res.send("Bot is running!");
+  res.send("Bot läuft!");
 });
 
 app.listen(PORT, () => {
   console.log(`Webserver läuft auf Port ${PORT}`);
 });
 
-// === DISCORD BOT ===
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -21,11 +19,11 @@ const client = new Client({
   ]
 });
 
-// ENV VARS (Render)
 const TOKEN = process.env.TOKEN;
-const WELCOME_CHANNEL_ID = process.env.1507456889615810642;
-const ROLE_1_ID = process.env.1508899625258717355;
-const ROLE_2_ID = process.env.1507456888843800596;
+
+const WELCOME_CHANNEL_ID = "1507456889615810642";
+const ROLE_1_ID = "1508899625258717355";
+const ROLE_2_ID = "1507456888843800596";
 
 client.once(Events.ClientReady, () => {
   console.log(`Bot online als ${client.user.tag}`);
@@ -39,11 +37,11 @@ client.on(Events.GuildMemberAdd, async (member) => {
     const channel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
 
     if (channel) {
-      channel.send(`👋 Willkommen ${member} auf dem Server!`);
+      channel.send(`👋 Willkommen ${member}!`);
     }
 
   } catch (err) {
-    console.error("Join error:", err);
+    console.error(err);
   }
 });
 
