@@ -37,15 +37,14 @@ const ROLE_IDS = [
 const LOG_CHANNEL_ID = "1507456889615810642";
 
 // ======================
-// READY
+// READY EVENT
 // ======================
 client.once("clientReady", () => {
     console.log("Bot online: " + client.user.tag);
 });
-});
 
 // ======================
-// AUTO ROLES + JOIN LOG
+// JOIN EVENT
 // ======================
 client.on("guildMemberAdd", async (member) => {
 
@@ -72,7 +71,7 @@ client.on("guildMemberAdd", async (member) => {
         )
         .setColor(0x00ffcc)
         .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 1024 }))
-        .setFooter({ text: "powered by FARM " })
+        .setFooter({ text: "powered by PowerBot" })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] }).catch(console.error);
@@ -81,8 +80,4 @@ client.on("guildMemberAdd", async (member) => {
 // ======================
 // LOGIN
 // ======================
-client.on("guildMemberAdd", async (member) => {
-    // code
-});
-
 client.login(process.env.DISCORD_TOKEN);
