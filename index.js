@@ -42,7 +42,8 @@ const LOG_CHANNEL_ID = "1507456889615810642";
 client.once("clientReady", () => {
     console.log("Bot online: " + client.user.tag);
 });
-});
+
+client.login(process.env.DISCORD_TOKEN);
 
 // ======================
 // AUTO ROLES + JOIN LOG
@@ -80,4 +81,3 @@ client.on("guildMemberAdd", async (member) => {
 // ======================
 // LOGIN
 // ======================
-client.login(process.env.DISCORD_TOKEN);
