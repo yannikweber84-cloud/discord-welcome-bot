@@ -29,7 +29,8 @@ app.listen(PORT, () => {
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates
   ]
 });
 
@@ -48,6 +49,11 @@ const WELCOME_CHANNEL_ID = "1507456889615810642";
 const ROLE_1_ID = "1508899625258717355";
 const ROLE_2_ID = "1507456888843800596";
 
+// Voice Support
+const SUPPORT_WARTE_RAUM_ID = "1507456890253349029";
+const SUPPORT_LOG_CHANNEL_ID = "1507456890576306401";
+const SUPPORT_ROLE_ID = "1508899899222134835";
+
 // =========================
 // BOT READY
 // =========================
@@ -64,16 +70,13 @@ client.on(Events.GuildMemberAdd, async (member) => {
 
   try {
 
-    // Rollen geben
     await member.roles.add(ROLE_1_ID);
     await member.roles.add(ROLE_2_ID);
 
-    // Channel holen
     const channel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
 
     if (!channel) return;
 
-    // Welcome Embed
     const embed = new EmbedBuilder()
       .setColor("Yellow")
       .setTitle("⚡️ Logging ⚡️")
@@ -100,13 +103,67 @@ Aktuelle Memberanzahl: ${member.guild.memberCount}`
       })
       .setTimestamp();
 
-    // Nachricht senden
-    channel.send({
+    await channel.send({
       embeds: [embed]
     });
 
   } catch (err) {
     console.error("Fehler beim Join:", err);
+  }
+
+});
+
+// =========================
+// VOICE SUPPORT SYSTEM
+// =========================
+
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+
+  if (
+    newState.channelId === SUPPORT_WARTE_RAUM_ID &&
+    oldState.channelId !== SUPPORT_WARTE_RAUM_ID
+  ) {
+
+    try {
+
+      const logChannel = newState.guild.channels.cache.get(SUPPORT_LOG_CHANNEL_ID);
+
+      if (!logChannel) return;
+
+      const embed = new EmbedBuilder()
+        .setColor("Yellow")
+        .setTitle("🎧 Voice-Support benötigt!")
+        .setDescription(
+`Ein Spieler wartet im Voice-Support Kanal auf Hilfe!
+
+👤 Spieler: ${newState.member}
+📞 Kanal: ${newState.channel}
+⏰ Zeit: <t:${Math.floor(Date.now() / 1000)}:R>`
+        )
+        .setThumbnail(
+          newState.member.user.displayAvatarURL({
+            dynamic: true
+          })
+        )
+        .setImage(
+          newState.member.user.displayAvatarURL({
+            dynamic: true,
+            size: 1024
+          })
+        )
+        .setFooter({
+          text: "FarmMC Voice-Support"
+        })
+        .setTimestamp();
+
+      await logChannel.send({
+        content: `<@&${SUPPORT_ROLE_ID}>`,
+        embeds: [embed]
+      });
+
+    } catch (err) {
+      console.error("Voice-Support Fehler:", err);
+    }
   }
 
 });
