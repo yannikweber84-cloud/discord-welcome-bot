@@ -152,7 +152,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
           })
         )
         .setFooter({
-          text: "FarmMC Voice-Support"
+          text: "FARM Voice-Support"
         })
         .setTimestamp();
 
