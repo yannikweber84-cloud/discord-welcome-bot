@@ -30,7 +30,7 @@ app.listen(PORT, () => {
 // =========================
 
 const TOKEN = process.env.TOKEN;
-const clientId = "1509566143051071578";
+const clientId = "1509573279864590568";
 
 // =========================
 // COUNTING VARS
