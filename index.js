@@ -186,29 +186,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
 // COUNTING SYSTEM
 // =========================
 
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot) return;
-  if (!countingActive) return;
+client.on('messageCreate', async message => {
+    if (message.author.bot) return;
+    if (!countingActive) return;
 
-  if (!/^\d+$/.test(message.content)) return;
+    if (!/^\d+$/.test(message.content)) return;
 
-  const number = parseInt(message.content);
+    const number = parseInt(message.content);
 
-  if (message.author.id === lastUserId) {
-    currentNumber = 1;
-    lastUserId = null;
-    return message.channel.send("❌ Fehler! Reset auf 1");
-  }
+    // gleiche Person 2x hintereinander = Fail
+    if (message.author.id === lastUserId) {
+        await message.channel.send('❌ Gleicher User 2x! Reset auf **1**');
+        currentNumber = 1;
+        lastUserId = null;
+        return;
+    }
 
-  if (number === currentNumber) {
-    await message.react("✅");
-    lastUserId = message.author.id;
-    currentNumber++;
-  } else {
-    currentNumber = 1;
-    lastUserId = null;
-    message.channel.send("❌ Falsch! Reset auf 1");
-  }
+    // richtige Zahl
+    if (number === currentNumber) {
+
+        await message.react('✅');
+
+        lastUserId = message.author.id;
+        currentNumber++;
+
+        // 🔥 LIMIT 100000
+        if (currentNumber > 100000) {
+            currentNumber = 1;
+            await message.channel.send('🎉 Ziel erreicht! Reset auf **1**');
+        }
+
+    } else {
+        await message.channel.send(`❌ Falsch! Richtige Zahl war **${currentNumber}** → Reset auf **1**`);
+        currentNumber = 1;
+        lastUserId = null;
+    }
 });
 
 // =========================
