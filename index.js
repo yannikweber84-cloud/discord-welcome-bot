@@ -194,32 +194,26 @@ client.on('messageCreate', async message => {
 
     const number = parseInt(message.content);
 
-    // gleiche Person 2x hintereinander = Fail
-    if (message.author.id === lastUserId) {
-        await message.channel.send('❌ Gleicher User 2x! Reset auf **1**');
-        currentNumber = 1;
-        lastUserId = null;
-        return;
-    }
+    // ❌ KEIN User-Check mehr (jeder darf mehrfach hintereinander)
 
-    // richtige Zahl
     if (number === currentNumber) {
 
         await message.react('✅');
 
-        lastUserId = message.author.id;
         currentNumber++;
 
-        // 🔥 LIMIT 100000
+        // Reset bei 100000
         if (currentNumber > 100000) {
             currentNumber = 1;
-            await message.channel.send('🎉 Ziel erreicht! Reset auf **1**');
+            await message.channel.send('🎉 100000 erreicht! Reset auf **1**');
         }
 
     } else {
-        await message.channel.send(`❌ Falsch! Richtige Zahl war **${currentNumber}** → Reset auf **1**`);
+        await message.channel.send(
+            `❌ Falsch! Richtige Zahl war **${currentNumber}** → Reset auf **1**`
+        );
+
         currentNumber = 1;
-        lastUserId = null;
     }
 });
 
