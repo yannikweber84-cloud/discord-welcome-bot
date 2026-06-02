@@ -2,13 +2,16 @@ const {
   Client,
   GatewayIntentBits,
   Events,
-  EmbedBuilder
+  EmbedBuilder,
+  SlashCommandBuilder,
+  REST,
+  Routes
 } = require("discord.js");
 
 const express = require("express");
 
 // =========================
-// WEB SERVER FÜR RENDER
+// WEB SERVER
 // =========================
 
 const app = express();
@@ -23,25 +26,22 @@ app.listen(PORT, () => {
 });
 
 // =========================
-// DISCORD BOT
-// =========================
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates
-  ]
-});
-
-// =========================
-// ENV TOKEN
+// BOT
 // =========================
 
 const TOKEN = process.env.TOKEN;
+const clientId = "1509566143051071578";
 
 // =========================
-// IDs HIER EINTRAGEN
+// COUNTING VARS
+// =========================
+
+let countingActive = false;
+let currentNumber = 1;
+let lastUserId = null;
+
+// =========================
+// IDs (DEIN SYSTEM)
 // =========================
 
 const WELCOME_CHANNEL_ID = "1507456889615810642";
@@ -49,13 +49,51 @@ const WELCOME_CHANNEL_ID = "1507456889615810642";
 const ROLE_1_ID = "1508899625258717355";
 const ROLE_2_ID = "1507456888843800596";
 
-// Voice Support
 const SUPPORT_WARTE_RAUM_ID = "1507456890253349029";
 const SUPPORT_LOG_CHANNEL_ID = "1507456890576306401";
 const SUPPORT_ROLE_ID = "1508899899222134835";
 
 // =========================
-// BOT READY
+// CLIENT (EINZIGER CLIENT)
+// =========================
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+// =========================
+// SLASH COMMAND
+// =========================
+
+const commands = [
+  new SlashCommandBuilder()
+    .setName("countingstart")
+    .setDescription("Startet das Counting")
+    .toJSON()
+];
+
+const rest = new REST({ version: "10" }).setToken(TOKEN);
+
+(async () => {
+  try {
+    await rest.put(
+      Routes.applicationCommands(clientId),
+      { body: commands }
+    );
+    console.log("Slash Commands registriert.");
+  } catch (error) {
+    console.error(error);
+  }
+})();
+
+// =========================
+// READY
 // =========================
 
 client.once(Events.ClientReady, () => {
@@ -63,18 +101,15 @@ client.once(Events.ClientReady, () => {
 });
 
 // =========================
-// MEMBER JOIN EVENT
+// JOIN SYSTEM
 // =========================
 
 client.on(Events.GuildMemberAdd, async (member) => {
-
   try {
-
     await member.roles.add(ROLE_1_ID);
     await member.roles.add(ROLE_2_ID);
 
     const channel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
-
     if (!channel) return;
 
     const embed = new EmbedBuilder()
@@ -87,85 +122,93 @@ UserId: ${member.id}
 
 Aktuelle Memberanzahl: ${member.guild.memberCount}`
       )
-      .setThumbnail(
-        member.user.displayAvatarURL({
-          dynamic: true
-        })
-      )
-      .setImage(
-        member.user.displayAvatarURL({
-          dynamic: true,
-          size: 1024
-        })
-      )
-      .setFooter({
-        text: "powered by FARM"
-      })
+      .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
       .setTimestamp();
 
-    await channel.send({
-      embeds: [embed]
-    });
+    await channel.send({ embeds: [embed] });
 
   } catch (err) {
-    console.error("Fehler beim Join:", err);
+    console.error("Join Fehler:", err);
   }
-
 });
 
 // =========================
-// VOICE SUPPORT SYSTEM
+// VOICE SUPPORT
 // =========================
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
-
-  if (
-    newState.channelId === SUPPORT_WARTE_RAUM_ID &&
-    oldState.channelId !== SUPPORT_WARTE_RAUM_ID
-  ) {
-
-    try {
+  try {
+    if (
+      newState.channelId === SUPPORT_WARTE_RAUM_ID &&
+      oldState.channelId !== SUPPORT_WARTE_RAUM_ID
+    ) {
 
       const logChannel = newState.guild.channels.cache.get(SUPPORT_LOG_CHANNEL_ID);
-
       if (!logChannel) return;
 
       const embed = new EmbedBuilder()
         .setColor("Yellow")
         .setTitle("🎧 Voice-Support benötigt!")
         .setDescription(
-`Ein Spieler wartet im Voice-Support Kanal auf Hilfe!
-
-👤 Spieler: ${newState.member}
+`👤 Spieler: ${newState.member}
 📞 Kanal: ${newState.channel}
 ⏰ Zeit: <t:${Math.floor(Date.now() / 1000)}:R>`
         )
-        .setThumbnail(
-          newState.member.user.displayAvatarURL({
-            dynamic: true
-          })
-        )
-        .setImage(
-          newState.member.user.displayAvatarURL({
-            dynamic: true,
-            size: 1024
-          })
-        )
-        .setFooter({
-          text: "FARM Voice-Support"
-        })
         .setTimestamp();
 
       await logChannel.send({
         content: `<@&${SUPPORT_ROLE_ID}>`,
         embeds: [embed]
       });
-
-    } catch (err) {
-      console.error("Voice-Support Fehler:", err);
     }
+  } catch (err) {
+    console.error("Voice Fehler:", err);
+  }
+});
+
+// =========================
+// SLASH + COUNTING
+// =========================
+
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "countingstart") {
+    countingActive = true;
+    currentNumber = 1;
+    lastUserId = null;
+
+    await interaction.reply("🎉 Counting gestartet bei **1**!");
+  }
+});
+
+// =========================
+// COUNTING SYSTEM
+// =========================
+
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot) return;
+  if (!countingActive) return;
+
+  if (!/^\d+$/.test(message.content)) return;
+
+  const number = parseInt(message.content);
+
+  if (message.author.id === lastUserId) {
+    currentNumber = 1;
+    lastUserId = null;
+    return message.channel.send("❌ Fehler! Reset auf 1");
   }
 
+  if (number === currentNumber) {
+    await message.react("✅");
+    lastUserId = message.author.id;
+    currentNumber++;
+  } else {
+    currentNumber = 1;
+    lastUserId = null;
+    message.channel.send("❌ Falsch! Reset auf 1");
+  }
 });
 
 // =========================
